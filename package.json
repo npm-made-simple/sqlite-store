@@ -24,8 +24,8 @@
         "simple"
     ],
     "scripts": {
-        "build": "tsc --build --verbose",
-        "prepublishOnly": "npm run build"
+        "build": "rm -rf dist && npm ci && tsc -b",
+        "prepublishOnly": "npm shrinkwrap && npm run build"
     },
     "type": "module",
     "exports": "./dist/index.js",
