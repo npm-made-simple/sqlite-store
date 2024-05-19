@@ -1,0 +1,36 @@
+{
+    "compileOnSave": true,
+    "include": ["./src"],
+    "exclude": [
+        "./node_modules",
+        "./dist"
+    ],
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "newLine": "lf",
+        "forceConsistentCasingInFileNames": true,
+
+        "importHelpers": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+
+        "strict": true,
+        "incremental": true,
+        "skipLibCheck": true,
+        "downlevelIteration": true,
+
+        "noImplicitAny": false,
+
+        "declaration": true,
+        "outDir": "./dist",
+        "tsBuildInfoFile": "./dist/.tsbuildinfo",
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/types"
+        ]
+    }
+}

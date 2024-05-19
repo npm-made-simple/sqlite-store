@@ -1,0 +1,42 @@
+{
+    "name": "@made-simple/sqlite-store",
+    "description": "Makes use of Keyv to make an even easier SQLite that also cares about dev/prod environments",
+    "license": "MIT",
+    "version": "1.0.0",
+    "private": false,
+    "author": {
+        "name": "alexasterisk",
+        "url": "https://github.com/alexasterisk"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/npm-made-simple/sqlite-store"
+    },
+    "dependencies": {
+        "@keyv/sqlite": "^3.6.7",
+        "keyv": "^4.5.4"
+    },
+    "keywords": [
+        "keyv",
+        "sqlite",
+        "store",
+        "database",
+        "simple"
+    ],
+    "scripts": {
+        "build": "tsc --build --verbose",
+        "prepublishOnly": "npm run build"
+    },
+    "type": "module",
+    "exports": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "devDependencies": {
+        "@types/node": "^20.12.12",
+        "ts-node": "^10.9.2",
+        "tslib": "^2.6.2"
+    },
+    "files": [
+        "dist/",
+        "!.tsbuildinfo"
+    ]
+}
