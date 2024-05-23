@@ -1,13 +1,19 @@
 import Keyv from "keyv";
+import { TaggedLogger, chalk } from "@made-simple/logging";
+
+const logger = new TaggedLogger("store", chalk.magentaBright);
 
 /**
  * Wrapper for Keyv SQLite databases.
- * @example
+ *
+ * ```js
  * const store = new Store("db/store");
  * store.set("key", "value");
  * store.get("key"); // "value"
+ * ```
  */
 export default class Store<T extends {} = {}> {
+    protected readonly cleanUri: string;
     protected readonly inDevMode: boolean = false;
     readonly uri: string;
     protected keyv: Keyv | null = null;
@@ -26,12 +32,21 @@ export default class Store<T extends {} = {}> {
      * Creates an instance of Store.
      * @param {string} uri The URI of the database.
      * @param {boolean} clean Whether to clear the database. Optional.
-     * @example
+     * 
+     * ```js
      * const store = new Store("db/store");
+     * ```
      */
     constructor(uri: string, clean?: boolean) {
-        this.uri = `sqlite://${uri}.sqlite`;
-        if (process.env.NODE_ENV === "development") this.inDevMode = true;
+        if (!uri.endsWith(".sqlite")) uri += ".sqlite";
+        if (!uri.startsWith("sqlite://")) uri = "sqlite://" + uri;
+        this.cleanUri = uri.slice(9, -7);
+        this.uri = uri;
+
+        if (process.env.NODE_ENV === "development") {
+            this.inDevMode = true;
+            logger.warn(`Loading %s in development mode. Data will be fetched once but not updated.`, chalk.bold(this.cleanUri))
+        }
 
         this.connect();
         if (clean) this.clear();
@@ -42,9 +57,10 @@ export default class Store<T extends {} = {}> {
      * Returns `undefined` if the database is not connected.
      * @param {string | symbol} event The event to listen to.
      * @param {(...args: any[]) => void} listener The listener to add.
-     * @returns {true | undefined}
-     * @example
+     * 
+     * ```js
      * store.addListener("error", console.error);
+     * ```
      */
     addListener(event: string | symbol, listener: (...args: any[]) => void): true | undefined {
         if (!this.connected) return undefined;
@@ -54,13 +70,18 @@ export default class Store<T extends {} = {}> {
 
     /**
      * Connects to the database.
-     * @returns {Promise<void>}
-     * @example
+     *
+     * ```js
      * this.connect();
+     * ```
      */
     protected async connect(): Promise<void> {
         this.keyv = new Keyv(this.uri);
-        this.keyv.prependListener("error", console.error);
+        logger.debug("Connected to", chalk.bold(this.cleanUri));
+
+        this.addListener("error", (error: Error) => {
+            logger.error(`Error in %s: %s`, chalk.bold(this.cleanUri), error.message);
+        });
 
         const data = await this.keyv.get("store") ?? {};
         this.connected_ = true;
@@ -69,27 +90,32 @@ export default class Store<T extends {} = {}> {
 
     /**
      * Reconnects to the database if disconnected.
-     * @returns {true}
-     * @example
+     *
+     * ```js
      * store.reconnect();
+     * ```
      */
     reconnect(): true {
         if (this.connected) return true;
+        logger.debug("Reconnecting to", chalk.bold(this.cleanUri));
         this.connect();
+
         return true;
     }
 
     /**
      * Disconnects from the database.
      * Returns `undefined` if the database is already disconnected.
-     * @returns {true | undefined}
-     * @example
+     *
+     * ```js
      * store.disconnect(); // true
      * store.disconnect(); // undefined
+     * ```
      */
     disconnect(): true | undefined {
         if (!this.connected) return undefined;
         this.keyv!.disconnect().finally(() => {
+            logger.debug("Disconnected from", chalk.bold(this.cleanUri));
             this.store = {} as T;
             this.connected_ = false;
         });
@@ -103,36 +129,40 @@ export default class Store<T extends {} = {}> {
      * Returns `undefined` if the database is not connected.
      * If the operation fails, the database is reverted and `false` is returned.
      * @param {T} template The template to reconcile with.
-     * @returns {boolean | undefined}
-     * @example
+     *
+     * ```js
      * store.reconcile({ key: "value" });
      * store.get("key"); // "value"
+     * ```
      */
     reconcile(template: T): boolean | undefined {
         if (!this.connected) return undefined;
+        logger.debug("Reconciling %s with template", chalk.bold(this.cleanUri));
 
         const before = { ...this.store };
         for (const key in template) {
             if (!this.has(key)) this.store[key] = template[key];
         }
 
-        return this.update(before);
+        return this.update(before, "reconcile");
     }
 
     /**
      * Clears the database.
      * Returns `undefined` if the database is not connected.
      * If the operation fails, the database is reverted and `false` is returned.
-     * @returns {boolean | undefined}
-     * @example
+     *
+     * ```js
      * store.clear();
+     * ```
      */
     clear(): boolean | undefined {
         if (!this.connected) return undefined;
+        logger.debug("Clearing %s", chalk.bold(this.cleanUri));
 
         const before = { ...this.store };
         this.store = {} as T;
-        return this.update(before);
+        return this.update(before, "clear");
     }
 
     /**
@@ -141,11 +171,12 @@ export default class Store<T extends {} = {}> {
      * Returns `null` if the key does not exist.
      * If the operation fails, the database is reverted and `false` is returned.
      * @param {string} key The key to delete.
-     * @returns {boolean | null | undefined}
-     * @example
+     *
+     * ```js
      * store.delete("key");
      * store.get("key"); // null
      * store.delete("key"); // null
+     * ```
      */
     delete(key: string): boolean | null | undefined {
         if (!this.connected) return undefined;
@@ -164,11 +195,12 @@ export default class Store<T extends {} = {}> {
      * Returns `null` if the key does not exist and no fallback is provided.
      * @param {string} key The key to get.
      * @param {T} fallback The fallback value to use. Optional.
-     * @returns {T | null | undefined}
-     * @example
+     *
+     * ```js
      * store.get("key"); // null
      * store.get("key", "value"); // "value"
      * store.get("key"); // "value"
+     * ```
      */
     get<T extends unknown>(key: string, fallback?: T): T | null | undefined {
         if (!this.connected) return undefined;
@@ -184,11 +216,12 @@ export default class Store<T extends {} = {}> {
      * Checks if a key exists in the database.
      * Returns `undefined` if the database is not connected.
      * @param {string} key The key to check.
-     * @returns {boolean | undefined}
-     * @example
+     *
+     * ```js
      * store.has("key"); // false
      * store.set("key", "value");
      * store.has("key"); // true
+     * ```
      */
     has(key: string): boolean | undefined {
         if (!this.connected) return undefined;
@@ -201,10 +234,11 @@ export default class Store<T extends {} = {}> {
      * If the operation fails, the database is reverted and `false` is returned.
      * @param {string} key The key to set.
      * @param {T} value The value to set.
-     * @returns {boolean | undefined}
-     * @example
+     *
+     * ```js
      * store.set("key", "value");
      * store.get("key"); // "value"
+     * ```
      */
     set<T extends unknown>(key: string, value: T): boolean | undefined {
         if (!this.connected) return undefined;
@@ -223,11 +257,12 @@ export default class Store<T extends {} = {}> {
      * @param {Store<Y>} store The Store to copy from.
      * @param {string} key The key to copy.
      * @param {Z} fallback The fallback value to use. Optional.
-     * @returns {boolean | null | undefined}
-     * @example
+     *
+     * ```js
      * store2.set("key", "value");
      * store.copyKey(store2, "key"); // true
      * store.get("key"); // "value"
+     * ```
      */
     copyKey<Z extends unknown, Y extends {} = {}>(store: Store<Y>, key: string, fallback?: Z): boolean | null | undefined {
         if (!this.connected || !store.connected) return undefined;
@@ -243,11 +278,12 @@ export default class Store<T extends {} = {}> {
      * If the operation fails, the database is reverted and `false` is returned.
      * @param {Store<Y>} store The Store to copy from.
      * @param {boolean} clean Whether to clear the database before copying. Optional.
-     * @returns {boolean | undefined}
-     * @example
+     *
+     * ```js
      * store2.set("key", "value");
      * store.copyFrom(store2);
      * store.get("key"); // "value"
+     * ```
      */
     copyFrom<Y extends {} = {}>(store: Store<Y>, clean?: boolean): boolean | undefined {
         if (!this.connected || !store.connected) return undefined;
@@ -258,7 +294,7 @@ export default class Store<T extends {} = {}> {
             this.store[key as string] = store.internalStore[key];
         }
 
-        return this.update(before);
+        return this.update(before, "copyFrom");
     }
 
     /**
@@ -266,18 +302,24 @@ export default class Store<T extends {} = {}> {
      * Returns `undefined` if the database is not connected.
      * If the operation fails, the database is reverted and `false` is returned.
      * @param {T} before The state of the database before the update. Optional.
-     * @returns {boolean | undefined}
-     * @example
+     *
+     * ```js
      * store.store = { key: "value" };
      * store.update();
+     * ```
      */
-    protected update(before?: T): boolean | undefined {
+    protected update(before?: T, action?: string): boolean | undefined {
         if (!this.connected) return undefined;
         if (this.inDevMode) return true;
         let failed = false;
 
         this.keyv!.set("store", this.store).catch(() => {
-            if (before) this.store = before;
+            if (action) logger.error("Failed to execute %s on %s.", action, chalk.bold(this.cleanUri));
+            if (before) {
+                if (action) logger.debug("Reverting to previous state.");
+                this.store = before;
+            }
+
             failed = true;
         });
 
