@@ -1,7 +1,5 @@
 import Keyv from "keyv";
-import { TaggedLogger, chalk } from "@made-simple/logging";
-
-const logger = new TaggedLogger("store", chalk.magentaBright);
+import { LoggerBuilder, chalk } from "@made-simple/logging";
 
 /**
  * Wrapper for Keyv SQLite databases.
@@ -18,6 +16,7 @@ export default class Store<T extends {} = {}> {
     readonly uri: string;
     protected keyv: Keyv | null = null;
     protected store: T = {} as T;
+    protected logger = new LoggerBuilder("store", chalk.magentaBright);
     private connected_: boolean = false;
 
     get internalStore(): T {
@@ -37,15 +36,17 @@ export default class Store<T extends {} = {}> {
      * const store = new Store("db/store");
      * ```
      */
-    constructor(uri: string, clean?: boolean) {
+    constructor(uri: string, clean?: boolean, logger?: LoggerBuilder) {
         if (!uri.endsWith(".sqlite")) uri += ".sqlite";
         if (!uri.startsWith("sqlite://")) uri = "sqlite://" + uri;
         this.cleanUri = uri.slice(9, -7);
         this.uri = uri;
 
+        if (logger) this.logger = logger;
+
         if (process.env.NODE_ENV === "development") {
             this.inDevMode = true;
-            logger.warn(`Loading %s in development mode. Data will be fetched once but not updated.`, chalk.bold(this.cleanUri))
+            this.logger.warn(`Loading %s in development mode. Data will be fetched once but not updated.`, chalk.bold(this.cleanUri))
         }
 
         this.connect();
@@ -77,10 +78,10 @@ export default class Store<T extends {} = {}> {
      */
     protected async connect(): Promise<void> {
         this.keyv = new Keyv(this.uri);
-        logger.debug("Connected to", chalk.bold(this.cleanUri));
+        this.logger.debug("Connected to", chalk.bold(this.cleanUri));
 
         this.addListener("error", (error: Error) => {
-            logger.error(`Error in %s: %s`, chalk.bold(this.cleanUri), error.message);
+            this.logger.error(`Error in %s: %s`, chalk.bold(this.cleanUri), error.message);
         });
 
         const data = await this.keyv.get("store") ?? {};
@@ -97,7 +98,7 @@ export default class Store<T extends {} = {}> {
      */
     reconnect(): true {
         if (this.connected) return true;
-        logger.debug("Reconnecting to", chalk.bold(this.cleanUri));
+        this.logger.debug("Reconnecting to", chalk.bold(this.cleanUri));
         this.connect();
 
         return true;
@@ -115,7 +116,7 @@ export default class Store<T extends {} = {}> {
     disconnect(): true | undefined {
         if (!this.connected) return undefined;
         this.keyv!.disconnect().finally(() => {
-            logger.debug("Disconnected from", chalk.bold(this.cleanUri));
+            this.logger.debug("Disconnected from", chalk.bold(this.cleanUri));
             this.store = {} as T;
             this.connected_ = false;
         });
@@ -137,7 +138,7 @@ export default class Store<T extends {} = {}> {
      */
     reconcile(template: T): boolean | undefined {
         if (!this.connected) return undefined;
-        logger.debug("Reconciling %s with template", chalk.bold(this.cleanUri));
+        this.logger.debug("Reconciling %s with template", chalk.bold(this.cleanUri));
 
         const before = { ...this.store };
         for (const key in template) {
@@ -158,7 +159,7 @@ export default class Store<T extends {} = {}> {
      */
     clear(): boolean | undefined {
         if (!this.connected) return undefined;
-        logger.debug("Clearing %s", chalk.bold(this.cleanUri));
+        this.logger.debug("Clearing", chalk.bold(this.cleanUri));
 
         const before = { ...this.store };
         this.store = {} as T;
@@ -314,9 +315,9 @@ export default class Store<T extends {} = {}> {
         let failed = false;
 
         this.keyv!.set("store", this.store).catch(() => {
-            if (action) logger.error("Failed to execute %s on %s.", action, chalk.bold(this.cleanUri));
+            if (action) this.logger.error("Failed to execute %s on %s", action, chalk.bold(this.cleanUri));
             if (before) {
-                if (action) logger.debug("Reverting to previous state.");
+                if (action) this.logger.warn("Reverting to state before %s", action);
                 this.store = before;
             }
 
@@ -324,5 +325,17 @@ export default class Store<T extends {} = {}> {
         });
 
         return !failed;
+    }
+
+    /**
+     * Sets the logger for the Store.
+     * 
+     * ```js
+     * const logger = new LoggerBuilder("MyStore", chalk.red);
+     * store.setLogger(logger);
+     * ```
+     */
+    setLogger(logger: LoggerBuilder): void {
+        this.logger = logger;
     }
 }
