@@ -299,6 +299,56 @@ export default class Store<T extends {} = {}> {
     }
 
     /**
+     * Iterates over the database with a callback.
+     * Returns `undefined` if the database is not connected.
+     * @param {(key: string, value: T, update: (value: T) => void) => void} callback The callback to execute.
+     * 
+     * ```js
+     * store.forEach((key, value, update) => {
+     *     update(value + 1);
+     * });
+     * ```
+     */
+    forEach(callback: (key: string, value: T, update: (value: T) => void) => void): void | undefined {
+        if (!this.connected) return undefined;
+
+        for (const key in this.store) {
+            callback(key, this.store[key] as T, value => {
+                this.set(key, value);
+            });
+        }
+    }
+
+    /**
+     * Iterates over the database with a callback and a filter.
+     * Returns `undefined` if the database is not connected.
+     * @param {string | RegExp} filter The filter to apply.
+     * @param {(key: string, value: T, update: (value: T) => void) => void} callback The callback to execute.
+     * 
+     * ```js
+     * store.forMatched(/^key \d+$/, (key, value, update) => {
+     *     update(value + 1);
+     * });
+     * 
+     * const regexp = new RegExp("^key \\d+$");
+     * store.forMatched(regexp, (key, value, update) => {
+     *    update(value + 1);
+     * });
+     */
+    forMatched(filter: string | RegExp, callback: (key: string, value: T, update: (value: T) => void) => void): void | undefined {
+        if (!this.connected) return undefined;
+
+        const regexp = filter instanceof RegExp ? filter : new RegExp(filter);
+        for (const key in this.store) {
+            if (regexp.test(key)) {
+                callback(key, this.store[key] as T, value => {
+                    this.set(key, value);
+                });
+            }
+        }
+    }
+
+    /**
      * Updates the database. Primarily used internally.
      * Returns `undefined` if the database is not connected.
      * If the operation fails, the database is reverted and `false` is returned.
