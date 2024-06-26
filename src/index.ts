@@ -309,7 +309,7 @@ export default class Store<T extends {} = {}> {
      * });
      * ```
      */
-    forEach(callback: (key: string, value: T, update: (value: T) => void) => void): void | undefined {
+    forEach<T extends unknown>(callback: (key: string, value: T, update: (value: T) => void) => void): void | undefined {
         if (!this.connected) return undefined;
 
         for (const key in this.store) {
@@ -335,7 +335,7 @@ export default class Store<T extends {} = {}> {
      *    update(value + 1);
      * });
      */
-    forMatched(filter: string | RegExp, callback: (key: string, value: T, update: (value: T) => void) => void): void | undefined {
+    forMatched<T extends unknown>(filter: string | RegExp, callback: (key: string, value: T, update: (value: T) => void) => void): void | undefined {
         if (!this.connected) return undefined;
 
         const regexp = filter instanceof RegExp ? filter : new RegExp(filter);
