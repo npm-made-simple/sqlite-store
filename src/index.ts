@@ -334,6 +334,7 @@ export default class Store<T extends {} = {}> {
      * store.forMatched(regexp, (key, value, update) => {
      *    update(value + 1);
      * });
+     * ```
      */
     forMatched<T extends unknown>(filter: string | RegExp, callback: (key: string, value: T, update: (value: T) => void) => void): void | undefined {
         if (!this.connected) return undefined;

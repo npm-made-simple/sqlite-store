@@ -1,12 +1,12 @@
 {
     "name": "@made-simple/sqlite-store",
-    "version": "1.3.0",
+    "version": "1.3.2",
     "lockfileVersion": 3,
     "requires": true,
     "packages": {
         "": {
             "name": "@made-simple/sqlite-store",
-            "version": "1.3.0",
+            "version": "1.3.2",
             "license": "MIT",
             "dependencies": {
                 "@keyv/sqlite": "^3.6.7",
