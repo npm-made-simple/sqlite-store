@@ -1,4 +1,5 @@
 import Keyv from "keyv";
+import KeyvSqlite from "@keyv/sqlite";
 import { LoggerBuilder, chalk } from "@made-simple/logging";
 
 /**
@@ -56,14 +57,14 @@ export default class Store<T extends {} = {}> {
     /**
      * Adds a listener to the database.
      * Returns `undefined` if the database is not connected.
-     * @param {string | symbol} event The event to listen to.
+     * @param {string} event The event to listen to.
      * @param {(...args: any[]) => void} listener The listener to add.
      * 
      * ```js
      * store.addListener("error", console.error);
      * ```
      */
-    addListener(event: string | symbol, listener: (...args: any[]) => void): true | undefined {
+    addListener(event: string, listener: (...args: any[]) => void): true | undefined {
         if (!this.connected) return undefined;
         this.keyv!.addListener(event, listener);
         return true;
@@ -77,7 +78,8 @@ export default class Store<T extends {} = {}> {
      * ```
      */
     protected async connect(): Promise<void> {
-        this.keyv = new Keyv(this.uri);
+        const keyvSqlite = new KeyvSqlite(this.uri);
+        this.keyv = new Keyv({ store: KeyvSqlite });
         this.logger.debug("Connected to", chalk.bold(this.cleanUri));
 
         this.addListener("error", (error: Error) => {
