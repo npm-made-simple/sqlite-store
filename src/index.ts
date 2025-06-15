@@ -79,7 +79,7 @@ export default class Store<T extends {} = {}> {
      */
     protected async connect(): Promise<void> {
         const keyvSqlite = new KeyvSqlite(this.uri);
-        this.keyv = new Keyv({ store: KeyvSqlite });
+        this.keyv = new Keyv({ store: keyvSqlite });
         this.logger.debug("Connected to", chalk.bold(this.cleanUri));
 
         this.addListener("error", (error: Error) => {

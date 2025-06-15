@@ -2,7 +2,7 @@
     "name": "@made-simple/sqlite-store",
     "description": "Makes use of Keyv to make an even easier SQLite that also cares about dev/prod environments",
     "license": "MIT",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "private": false,
     "author": {
         "name": "alexasterisk",
