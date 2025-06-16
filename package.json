@@ -2,7 +2,7 @@
     "name": "@made-simple/sqlite-store",
     "description": "Makes use of Keyv to make an even easier SQLite that also cares about dev/prod environments",
     "license": "MIT",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "private": false,
     "author": {
         "name": "alexasterisk",
@@ -27,7 +27,7 @@
     "exports": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "dependencies": {
-        "@made-simple/logging": "^2.4.0",
+        "@made-simple/logging": "^2.5.0",
         "@keyv/sqlite": "^4.0.4",
         "keyv": "^5.3.3"
     },

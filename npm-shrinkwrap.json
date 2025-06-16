@@ -1,16 +1,16 @@
 {
     "name": "@made-simple/sqlite-store",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "lockfileVersion": 3,
     "requires": true,
     "packages": {
         "": {
             "name": "@made-simple/sqlite-store",
-            "version": "1.4.1",
+            "version": "1.4.2",
             "license": "MIT",
             "dependencies": {
                 "@keyv/sqlite": "^4.0.4",
-                "@made-simple/logging": "^2.4.0",
+                "@made-simple/logging": "^2.5.0",
                 "keyv": "^5.3.3"
             },
             "devDependencies": {
@@ -111,19 +111,19 @@
             }
         },
         "node_modules/@made-simple/logging": {
-            "version": "2.4.0",
-            "resolved": "https://registry.npmjs.org/@made-simple/logging/-/logging-2.4.0.tgz",
-            "integrity": "sha512-AEG3kDGUVSLlQbFnNWO48OCifkM+Y2HkCC7ItgtA99KuLmfPDni4kykRlnA1lQOKBetY8/2F/8fsxf4QDbqymw==",
+            "version": "2.5.0",
+            "resolved": "https://registry.npmjs.org/@made-simple/logging/-/logging-2.5.0.tgz",
+            "integrity": "sha512-wZtn8bZdFF+Hu3N8nncXNebg7Jzm02ENtzu9aFIwsmCrKAJkJCTfqCvB3/S/PMMa8zl/BZCtgMd5a4U6kONvtw==",
             "license": "MIT",
             "dependencies": {
-                "@made-simple/util": "^2.0.0",
+                "@made-simple/util": "^2.1.0",
                 "chalk": "^5.4.1"
             }
         },
         "node_modules/@made-simple/util": {
-            "version": "2.0.0",
-            "resolved": "https://registry.npmjs.org/@made-simple/util/-/util-2.0.0.tgz",
-            "integrity": "sha512-U4/EMzZKD+mjwessAIET4hZ/JT6fF39YfhDaXku5Hin8kG+0k97dCOM7kbzW7skdzkd6EtnnY9cnddrvlG3rIg==",
+            "version": "2.1.0",
+            "resolved": "https://registry.npmjs.org/@made-simple/util/-/util-2.1.0.tgz",
+            "integrity": "sha512-W1NebRoW3u7VbAdzAr+gUboyzFQm6I8XNSgFVeuvMYGtqbXisDZxlDjP+GKfCgXNfPU3S8jyX+FAp3KaRZPGAA==",
             "license": "MIT",
             "dependencies": {
                 "parsed-packages": "^1.2.0"
